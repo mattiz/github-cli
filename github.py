@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 from getpass import getpass
+import re
 
 
 class colors:
@@ -83,7 +84,9 @@ def retrieveToken( file ):
 # List releases
 #
 def listReleases( token ):
-	url = server + '/repos/mattiz/cli-breakout/releases'
+	user, repo = get_repo_info()
+	url = server + '/repos/{}/{}/releases'.format( user, repo )
+
 	response = requests.get(url, headers={'Authorization': 'token ' + token})
 	response.encoding = 'UTF-8'
 
@@ -97,6 +100,28 @@ def listReleases( token ):
 			print( "{}{} ({}) -> {}{}".format( colors.OKGREEN, release['name'], release['tag_name'], release['tarball_url'], colors.ENDC ) )
 		else:
 			print( "{} ({}) -> {}".format( release['name'], release['tag_name'], release['tarball_url'] ) )
+
+
+#
+# Get Github user and repository name from current directory
+#
+def get_repo_info():
+	url = os.popen("git config --get remote.origin.url").read()
+
+	if not url:
+		print('Current directory is not a valid Git repository')
+		sys.exit(1)
+
+	pattern = re.compile('git@github\.com:([a-z]+)\/([a-z-]+)\.git')
+	match = pattern.match( url )
+
+	if match:
+		user = match.group(1)
+		repo = match.group(2)
+
+		return user, repo
+
+	return None
 
 
 #
