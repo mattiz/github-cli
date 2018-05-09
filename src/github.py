@@ -33,6 +33,15 @@ def createToken(creds):
     response = requests.post(url, data=json.dumps(data), auth=creds)
     response.encoding = 'UTF-8'
 
+    otpHeader = response.headers.get('X-GitHub-OTP')
+
+    # Handle login with two-factor authentication
+    if response.status_code == 401 and otpHeader != None and 'required' in otpHeader:
+        otp = input('Enter one-time password: ')
+
+        response = requests.post(url, data=json.dumps(data), auth=creds, headers={'X-GitHub-OTP': otp})
+        response.encoding = 'UTF-8'
+
     if response.status_code != 201:
         print('Unable to create token: ' + response.json()['message'])
         sys.exit(1)
