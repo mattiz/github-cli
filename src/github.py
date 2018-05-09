@@ -5,6 +5,7 @@ import requests
 import argparse
 import json
 import os
+import stat
 from getpass import getpass
 import re
 
@@ -71,6 +72,8 @@ def storeToken(file, token):
 
     with open(file, "w") as fp:
         fp.write(token)
+
+    os.chmod(file, stat.S_IRUSR)
 
 
 #
