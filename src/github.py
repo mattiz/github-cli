@@ -10,7 +10,7 @@ from getpass import getpass
 import re
 
 
-class colors:
+class Colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
@@ -24,7 +24,7 @@ class colors:
 #
 # Get authorization token
 #
-def createToken(creds):
+def create_token(creds):
     data = {
         'scopes': ['repo'],
         'note': 'Github CLI'
@@ -34,10 +34,10 @@ def createToken(creds):
     response = requests.post(url, data=json.dumps(data), auth=creds)
     response.encoding = 'UTF-8'
 
-    otpHeader = response.headers.get('X-GitHub-OTP')
+    otpheader = response.headers.get('X-GitHub-OTP')
 
     # Handle login with two-factor authentication
-    if response.status_code == 401 and otpHeader != None and 'required' in otpHeader:
+    if response.status_code == 401 and otpheader is not None and 'required' in otpheader:
         otp = input('Enter one-time password: ')
 
         response = requests.post(url, data=json.dumps(data), auth=creds, headers={'X-GitHub-OTP': otp})
@@ -52,17 +52,17 @@ def createToken(creds):
     return res['token']
 
 
-def askForCredentials():
+def ask_for_credentials():
     username = input('Username: ')
     password = getpass('Password: ')
 
-    return (username, password)
+    return username, password
 
 
 #
 # Store token
 #
-def storeToken(file, token):
+def store_token(file, token):
     file = os.path.expanduser(file)
 
     path, filename = os.path.split(file)
@@ -79,7 +79,7 @@ def storeToken(file, token):
 #
 # Get token
 #
-def retrieveToken(file):
+def retrieve_token(file):
     file = os.path.expanduser(file)
 
     if not os.path.exists(file):
@@ -95,7 +95,7 @@ def retrieveToken(file):
 #
 # List releases
 #
-def listReleases(token):
+def list_releases(token):
     user, repo = get_repo_info()
     url = server + '/repos/{}/{}/releases'.format(user, repo)
 
@@ -110,8 +110,8 @@ def listReleases(token):
     for id, release in enumerate(response.json()[0:5]):
         if id == 0:
             print(
-                "{}{} ({}) -> {}{}".format(colors.OKGREEN, release['name'], release['tag_name'], release['tarball_url'],
-                                           colors.ENDC))
+                "{}{} ({}) -> {}{}".format(Colors.OKGREEN, release['name'], release['tag_name'], release['tarball_url'],
+                                           Colors.ENDC))
         else:
             print("{} ({}) -> {}".format(release['name'], release['tag_name'], release['tarball_url']))
 
@@ -157,14 +157,14 @@ token_file = '~/.github/token'
 # Authenticate and get new token
 #
 if args.command == 'auth':
-    creds = askForCredentials()
-    token = createToken(creds)
-    storeToken(token_file, token)
+    creds = ask_for_credentials()
+    token = create_token(creds)
+    store_token(token_file, token)
     print('New token stored')
 
 #
 # List all releases
 #
 if args.command == 'list':
-    token = retrieveToken(token_file)
-    listReleases(token)
+    token = retrieve_token(token_file)
+    list_releases(token)
