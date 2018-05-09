@@ -138,33 +138,86 @@ def get_repo_info():
     return None
 
 
+
+
+
+
+
+
 #
 # Parse command line parameters
 #
-parser = argparse.ArgumentParser()
-parser.add_argument('command', help='Github command (release)')
 
-if len(sys.argv) == 1:
-    parser.print_help(sys.stderr)
-    sys.exit(1)
-
-args = parser.parse_args()
 
 server = 'https://api.github.com'
 token_file = '~/.github/token'
 
-#
-# Authenticate and get new token
-#
-if args.command == 'auth':
-    creds = ask_for_credentials()
-    token = create_token(creds)
-    store_token(token_file, token)
-    print('New token stored')
 
-#
-# List all releases
-#
-if args.command == 'list':
-    token = retrieve_token(token_file)
-    list_releases(token)
+class Github(object):
+
+    def __init__(self):
+        parser = argparse.ArgumentParser(
+            description='',
+            usage='''github <command> [<args>]
+
+The most commonly used github commands are:
+  auth        Create new authentication token
+  release     List, create or delete releases
+''')
+        parser.add_argument('command', help='Subcommand to run')
+
+        if len(sys.argv) == 1:
+            parser.print_help(sys.stderr)
+            sys.exit(1)
+
+        args = parser.parse_args(sys.argv[1:2])
+        if not hasattr(self, args.command):
+            print('Unrecognized command')
+            parser.print_help()
+            exit(1)
+
+        getattr(self, args.command)()
+
+    def auth(self):
+        parser = argparse.ArgumentParser(
+            usage='github auth',
+            description='Create new authentication token'
+        )
+        args = parser.parse_args(sys.argv[2:])
+
+        print('Please enter credentials to authenticate')
+        creds = ask_for_credentials()
+        token = create_token(creds)
+        store_token(token_file, token)
+        print('New token stored')
+
+    def release(self):
+        parser = argparse.ArgumentParser(
+            usage='github release <command> [<args>]',
+            description='List, create or delete releases'
+        )
+        parser.add_argument('command', help='Available commands is create, delete and list')
+        # parser.add_argument('args', nargs='?')
+        parser.add_argument('-n', '--name', help='Release name')
+        parser.add_argument('-t', '--tag', help='Tag used in the current release')
+        parser.add_argument('-f', '--file', help='Release file')
+        args = parser.parse_args(sys.argv[2:])
+
+        if args.command == 'create':
+            print('Create release')
+
+        elif args.command == 'delete':
+            print('Delete release')
+
+        elif args.command == 'list':
+            token = retrieve_token(token_file)
+            list_releases(token)
+
+        else:
+            print('Unrecognized command')
+            parser.print_help()
+            exit(1)
+
+
+if __name__ == '__main__':
+    Github()
